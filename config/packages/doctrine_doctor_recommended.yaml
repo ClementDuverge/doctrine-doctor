@@ -1,0 +1,75 @@
+# Recommended configuration for Doctrine Doctor
+# This configuration reduces false positives while catching real issues
+
+doctrine_doctor:
+    enabled: true
+
+    analyzers:
+        # N+1 query detection
+        n_plus_one:
+            enabled: true
+            # Lower threshold to catch even small N+1 patterns
+            threshold: 3
+
+        # Slow query detection with intelligent thresholds
+        slow_query:
+            enabled: true
+            # More realistic threshold - 1ms is too aggressive
+            # 10ms is a good balance: fast enough for UX, high enough to avoid noise
+            threshold: 10  # Changed from 1ms
+            # Note: Queries > 100ms will be marked as CRITICAL automatically
+
+        # Missing index detection
+        missing_index:
+            enabled: true
+            # More realistic thresholds
+            slow_query_threshold: 5    # Changed from 1ms
+            explain_queries: true
+            # Only flag significant table scans
+            min_rows_scanned: 500      # Changed from 10 - reduces noise
+
+        # Hydration analysis
+        hydration:
+            enabled: true
+            row_threshold: 1000        # Reasonable for most apps
+            critical_threshold: 5000   # Real memory concern
+
+        # Eager loading analysis
+        eager_loading:
+            enabled: true
+            join_threshold: 3
+            critical_join_threshold: 5
+
+        # EntityManager clear detection
+        entity_manager_clear:
+            enabled: true
+            batch_size_threshold: 50   # More realistic for batch processing
+
+        # GetReference detection
+        get_reference:
+            enabled: true
+            threshold: 5               # Only flag if significant
+
+        # Flush in loop detection
+        flush_in_loop:
+            enabled: true
+            flush_count_threshold: 3   # Stricter - flush in loop is bad
+            time_window_ms: 1000
+
+        # Lazy loading in loop
+        lazy_loading:
+            enabled: true
+            threshold: 5               # Lower threshold, more sensitive
+
+        # DQL injection security
+        dql_injection:
+            enabled: true
+
+        # Bulk operation detection
+        bulk_operation:
+            enabled: true
+            threshold: 50              # More realistic batch size
+
+    profiler:
+        show_in_toolbar: true
+        show_debug_info: false         # Cleaner UI in production

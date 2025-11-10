@@ -1,0 +1,78 @@
+# Default configuration for Doctrine Doctor Bundle
+# Copy this to your config/packages/doctrine_doctor.yaml and customize as needed
+
+doctrine_doctor:
+    # Enable or disable the bundle entirely
+    enabled: true
+
+    # Profiler integration
+    profiler:
+        show_in_toolbar: true
+
+    # Analyzer configurations
+    analyzers:
+        # N+1 Query Detection
+        n_plus_one:
+            enabled: true
+            threshold: 5  # Minimum number of similar queries to trigger detection
+
+        # Slow Query Detection
+        slow_query:
+            enabled: true
+            threshold: 100  # Threshold in milliseconds
+
+        # Missing Index Detection
+        missing_index:
+            enabled: true
+            slow_query_threshold: 1   # Run EXPLAIN on ALL queries (0.001ms+) for demo purposes
+            explain_queries: true     # Execute EXPLAIN to detect missing indexes
+            min_rows_scanned: 5       # Suggest index if 5+ rows scanned (lowered for demo)
+
+        # Hydration Analysis
+        hydration:
+            enabled: true
+            row_threshold: 50        # Number of rows to consider for analysis (lowered from 1000 to detect real cases)
+            critical_threshold: 500  # Number of rows to mark as critical (lowered from 5000)
+
+        # Eager Loading Analysis
+        eager_loading:
+            enabled: true
+            join_threshold: 4          # Maximum number of JOINs before warning
+            critical_join_threshold: 7  # Number of JOINs to mark as critical
+
+        # EntityManager Clear Detection (Memory Leak Prevention)
+        entity_manager_clear:
+            enabled: true
+            batch_size_threshold: 20  # Minimum number of INSERT/UPDATE operations to trigger detection
+
+        # GetReference Optimization Detection
+        get_reference:
+            enabled: true
+            threshold: 3  # Minimum number of simple SELECT by ID queries to suggest getReference()
+
+        # Flush in Loop Detection (Performance Anti-Pattern)
+        flush_in_loop:
+            enabled: true
+            flush_count_threshold: 5  # Minimum number of flush calls to trigger detection
+            time_window_ms: 1000      # Time window to consider flushes as being in a loop
+
+        # Lazy Loading Detection (N+1 variant)
+        lazy_loading:
+            enabled: true
+            threshold: 10  # Minimum number of lazy load queries to trigger detection
+
+        # DQL Injection Security Scanner
+        dql_injection:
+            enabled: true
+            # No threshold - security issues are always flagged
+
+        # Bulk Operation Detection
+        bulk_operation:
+            enabled: true
+            threshold: 20  # Minimum number of UPDATE/DELETE to suggest bulk operations
+
+        # JOIN Optimization Detection
+        join_optimization:
+            enabled: true
+            max_joins_recommended: 5  # Maximum recommended number of JOINs in a single query
+            max_joins_critical: 8     # Number of JOINs to mark as critical

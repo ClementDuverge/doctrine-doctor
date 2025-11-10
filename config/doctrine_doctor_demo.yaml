@@ -1,0 +1,74 @@
+# Optimized configuration for demos and development environments
+# This configuration uses low thresholds to detect issues even with little data
+
+doctrine_doctor:
+    enabled: true
+
+    profiler:
+        show_in_toolbar: true
+
+    analyzers:
+        # N+1 Query Detection
+        n_plus_one:
+            enabled: true
+            threshold: 3  # Detect even with 3 similar queries (instead of 5)
+
+        # Slow Query Detection
+        slow_query:
+            enabled: true
+            threshold: 50  # 50ms remains reasonable
+
+        # Missing Index Detection - OPTIMIZED FOR DEMO
+        missing_index:
+            enabled: true
+            slow_query_threshold: 1      # Analyze ALL SELECT queries (even fast ones)
+            explain_queries: true
+            min_rows_scanned: 5          # Alert from 5 scanned rows (for demo)
+
+        # Hydration Analysis
+        hydration:
+            enabled: true
+            row_threshold: 10           # Detect from 10 rows (instead of 50)
+            critical_threshold: 100     # Critical at 100 rows (instead of 500)
+
+        # Eager Loading Analysis
+        eager_loading:
+            enabled: true
+            join_threshold: 3           # Warning from 3 JOINs (instead of 4)
+            critical_join_threshold: 5  # Critical at 5 JOINs (instead of 7)
+
+        # EntityManager Clear Detection
+        entity_manager_clear:
+            enabled: true
+            batch_size_threshold: 10    # Detect from 10 operations (instead of 20)
+
+        # GetReference Optimization Detection
+        get_reference:
+            enabled: true
+            threshold: 2  # Suggest from 2 queries (instead of 3)
+
+        # Flush in Loop Detection
+        flush_in_loop:
+            enabled: true
+            flush_count_threshold: 3    # Detect from 3 flushes (instead of 5)
+            time_window_ms: 1000
+
+        # Lazy Loading Detection
+        lazy_loading:
+            enabled: true
+            threshold: 5  # Detect from 5 lazy loads (instead of 10)
+
+        # DQL Injection Security Scanner
+        dql_injection:
+            enabled: true
+
+        # Bulk Operation Detection
+        bulk_operation:
+            enabled: true
+            threshold: 10  # Suggest from 10 operations (instead of 20)
+
+        # JOIN Optimization Detection
+        join_optimization:
+            enabled: true
+            max_joins_recommended: 3  # Warning from 3 JOINs (instead of 5)
+            max_joins_critical: 5     # Critical at 5 JOINs (instead of 8)
