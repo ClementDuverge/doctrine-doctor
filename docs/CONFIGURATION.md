@@ -151,6 +151,7 @@ doctrine_doctor:
 **Description**: Automatically excludes entities from the `vendor/` directory during analysis. This filters out third-party entities from Symfony, Doctrine, FOSUserBundle, and other vendor bundles to provide cleaner, more relevant reports focused on your application code.
 
 **How it works**:
+
 - Uses **path-based detection** (`/vendor/` in file path) - 100% reliable
 - Filtering is **completely transparent** - no changes needed in your code
 - Results are **cached per request** for optimal performance (~0.1ms overhead)

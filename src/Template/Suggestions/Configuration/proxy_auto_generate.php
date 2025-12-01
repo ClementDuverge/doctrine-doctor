@@ -6,45 +6,43 @@ declare(strict_types=1);
  * Suggestion template for proxy auto-generation in production.
  *
  * Context variables: none required
+ * Note: This template doesn't display dynamic context variables, so htmlspecialchars() is not needed
  */
 
 ob_start();
 ?>
 
-Proxy auto-generation should be disabled in production.
+<p>Proxy auto-generation should be disabled in production.</p>
 
-## Current issue
+<h3>Current issue</h3>
 
-When enabled, Doctrine checks the filesystem on every request to see if proxy classes need regeneration. This causes unnecessary I/O operations and slows down entity loading.
+<p>When enabled, Doctrine checks the filesystem on every request to see if proxy classes need regeneration. This causes unnecessary I/O operations and slows down entity loading.</p>
 
-## Recommended configuration
+<h3>Recommended configuration</h3>
 
-```yaml
-# config/packages/prod/doctrine.yaml
+<pre><code># config/packages/prod/doctrine.yaml
 doctrine:
     orm:
         auto_generate_proxy_classes: false
-```
+</code></pre>
 
-## Deployment workflow
+<h3>Deployment workflow</h3>
 
-Generate proxies during deployment, not at runtime:
+<p>Generate proxies during deployment, not at runtime:</p>
 
-```bash
-php bin/console cache:clear --env=prod
+<pre><code>php bin/console cache:clear --env=prod
 php bin/console cache:warmup --env=prod
-```
+</code></pre>
 
-## Development environment
+<h3>Development environment</h3>
 
-Keep auto-generation enabled for convenience:
+<p>Keep auto-generation enabled for convenience:</p>
 
-```yaml
-# config/packages/dev/doctrine.yaml
+<pre><code># config/packages/dev/doctrine.yaml
 doctrine:
     orm:
         auto_generate_proxy_classes: true
-```
+</code></pre>
 
 <?php
 

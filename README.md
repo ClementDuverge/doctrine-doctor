@@ -58,18 +58,20 @@ Unlike static analysis tools (PHPStan, Psalm) that analyze code without executio
 ## ⚡ Quick Start (30 seconds)
 
 **Step 1: Install**
+
 ```bash
 composer require --dev ahmed-bhs/doctrine-doctor
 ```
 
 **Step 2: That's it!**
+
 Auto-configured via [Symfony Flex](https://github.com/symfony/recipes-contrib/pull/1882). No YAML, no configuration files needed.
 
 **Step 3: See it in action**
+
 1. Refresh any page in your Symfony app (in `dev` environment)
 2. Open the **Symfony Web Profiler** (bottom toolbar)
 3. Click the **"Doctrine Doctor"** panel 🩺
-
 
 ## Configuration (Optional)
 

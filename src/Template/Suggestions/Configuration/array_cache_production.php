@@ -14,16 +14,15 @@ declare(strict_types=1);
 ob_start();
 ?>
 
-<?php echo $context->cache_label; ?> is using '<?php echo $context->current_config; ?>' in production.
+<?php echo htmlspecialchars($context->cache_label); ?> is using '<?php echo htmlspecialchars($context->current_config); ?>' in production.
 
-This is a common misconfiguration that significantly impacts performance.
+<p>This is a common misconfiguration that significantly impacts performance.</p>
 
-## Recommended configuration
+<h3>Recommended configuration</h3>
 
-Use Redis (multi-server) or APCu (single-server):
+<p>Use Redis (multi-server) or APCu (single-server):</p>
 
-```yaml
-# config/packages/prod/doctrine.yaml
+<pre><code># config/packages/prod/doctrine.yaml
 doctrine:
     orm:
         metadata_cache_driver:
@@ -46,19 +45,23 @@ framework:
             doctrine.result_cache_pool:
                 adapter: cache.adapter.redis
                 default_lifetime: 3600
-```
+</code></pre>
 
-## Why this matters
+<h3>Why this matters</h3>
 
-- ArrayCache loses data after each request (no persistence)
-- Redis/APCu persists cache across all requests
-- Metadata parsing and DQL compilation are expensive operations
+<ul>
+<li>ArrayCache loses data after each request (no persistence)</li>
+<li>Redis/APCu persists cache across all requests</li>
+<li>Metadata parsing and DQL compilation are expensive operations</li>
+</ul>
 
-## After configuration
+<h3>After configuration</h3>
 
-1. Clear cache: `php bin/console cache:clear --env=prod`
-2. Warm up: `php bin/console cache:warmup --env=prod`
-3. Monitor cache hit rate in production
+<ol>
+<li>Clear cache: <code>php bin/console cache:clear --env=prod</code></li>
+<li>Warm up: <code>php bin/console cache:warmup --env=prod</code></li>
+<li>Monitor cache hit rate in production</li>
+</ol>
 
 <?php
 

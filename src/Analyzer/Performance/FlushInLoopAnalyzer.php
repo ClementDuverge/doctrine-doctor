@@ -218,7 +218,6 @@ class FlushInLoopAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\AnalyzerI
             return true;
         }
 
-
         return false;
     }
 }

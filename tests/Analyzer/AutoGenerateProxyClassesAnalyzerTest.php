@@ -32,6 +32,7 @@ use Twig\Loader\ArrayLoader;
 final class AutoGenerateProxyClassesAnalyzerTest extends TestCase
 {
     private AutoGenerateProxyClassesAnalyzer $analyzer;
+
     private string $tempDir;
 
     protected function setUp(): void

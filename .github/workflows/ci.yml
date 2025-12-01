@@ -3,16 +3,8 @@ name: CI
 on:
   push:
     branches: [ main, develop ]
-    branches-ignore:
-      - 'dependabot/**'
-      - 'github-actions/**'
-      - 'renovate/**'
   pull_request:
     branches: [ main, develop ]
-    branches-ignore:
-      - 'dependabot/**'
-      - 'github-actions/**'
-      - 'renovate/**'
 
 permissions:
   contents: read

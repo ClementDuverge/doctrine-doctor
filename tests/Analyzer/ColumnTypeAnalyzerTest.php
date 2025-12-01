@@ -26,7 +26,6 @@ use AhmedBhs\DoctrineDoctor\ValueObject\Severity;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
-use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
@@ -73,86 +72,6 @@ final class ColumnTypeAnalyzerTest extends TestCase
             $this->entityManager,
             $this->createSuggestionFactory(),
         );
-    }
-
-    /**
-     * Create tables manually for enum testing (avoiding problematic types like 'object').
-     */
-    private function createEnumTestTables(): void
-    {
-        $connection = $this->entityManager->getConnection();
-
-        // Create EntityWithEnumOpportunity table
-        $connection->executeStatement('
-            CREATE TABLE EntityWithEnumOpportunity (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                status VARCHAR(20) NOT NULL,
-                type VARCHAR(50) NOT NULL,
-                role VARCHAR(30) NOT NULL,
-                priority VARCHAR(20) NOT NULL,
-                name VARCHAR(100) NOT NULL,
-                description VARCHAR(255) NOT NULL
-            )
-        ');
-
-        // Create EntityWithMixedIssues table (simplified for testing)
-        $connection->executeStatement('
-            CREATE TABLE EntityWithMixedIssues (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                status VARCHAR(20) NOT NULL,
-                metadata TEXT,
-                settings TEXT,
-                tags VARCHAR(255)
-            )
-        ');
-
-        // Create EntityWithCorrectTypes table
-        $connection->executeStatement('
-            CREATE TABLE EntityWithCorrectTypes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name VARCHAR(255) NOT NULL,
-                data TEXT
-            )
-        ');
-    }
-
-    /**
-     * Insert test data to simulate enum-like patterns in database.
-     */
-    private function insertEnumTestData(): void
-    {
-        $connection = $this->entityManager->getConnection();
-
-        // Insert data for EntityWithEnumOpportunity with few distinct values (enum pattern)
-        // 200 rows with only 3 distinct status values = ratio 3/200 = 0.015 < 0.03 = enum-like
-        for ($i = 0; $i < 200; $i++) {
-            $status = ['active', 'inactive', 'pending'][$i % 3];
-            $type = ['basic', 'premium'][$i % 2];
-            $role = ['admin', 'user', 'guest'][$i % 3];
-            $priority = ['low', 'medium', 'high'][$i % 3];
-
-            $connection->insert('EntityWithEnumOpportunity', [
-                'status' => $status,
-                'type' => $type,
-                'role' => $role,
-                'priority' => $priority,
-                'name' => 'Name ' . $i,
-                'description' => 'Description ' . $i,
-            ]);
-        }
-
-        // Insert data for EntityWithMixedIssues
-        // 150 rows with 3 distinct status values = ratio 0.02 < 0.03 = enum-like
-        for ($i = 0; $i < 150; $i++) {
-            $status = ['draft', 'published', 'archived'][$i % 3];
-
-            $connection->insert('EntityWithMixedIssues', [
-                'status' => $status,
-                'metadata' => serialize(['key' => 'value']),
-                'settings' => serialize(['setting' => true]),
-                'tags' => 'tag1,tag2',
-            ]);
-        }
     }
 
     #[Test]
@@ -837,6 +756,86 @@ final class ColumnTypeAnalyzerTest extends TestCase
                 $issue->getDescription(),
                 'App entities should not have vendor warnings',
             );
+        }
+    }
+
+    /**
+     * Create tables manually for enum testing (avoiding problematic types like 'object').
+     */
+    private function createEnumTestTables(): void
+    {
+        $connection = $this->entityManager->getConnection();
+
+        // Create EntityWithEnumOpportunity table
+        $connection->executeStatement('
+            CREATE TABLE EntityWithEnumOpportunity (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                status VARCHAR(20) NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                role VARCHAR(30) NOT NULL,
+                priority VARCHAR(20) NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                description VARCHAR(255) NOT NULL
+            )
+        ');
+
+        // Create EntityWithMixedIssues table (simplified for testing)
+        $connection->executeStatement('
+            CREATE TABLE EntityWithMixedIssues (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                status VARCHAR(20) NOT NULL,
+                metadata TEXT,
+                settings TEXT,
+                tags VARCHAR(255)
+            )
+        ');
+
+        // Create EntityWithCorrectTypes table
+        $connection->executeStatement('
+            CREATE TABLE EntityWithCorrectTypes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name VARCHAR(255) NOT NULL,
+                data TEXT
+            )
+        ');
+    }
+
+    /**
+     * Insert test data to simulate enum-like patterns in database.
+     */
+    private function insertEnumTestData(): void
+    {
+        $connection = $this->entityManager->getConnection();
+
+        // Insert data for EntityWithEnumOpportunity with few distinct values (enum pattern)
+        // 200 rows with only 3 distinct status values = ratio 3/200 = 0.015 < 0.03 = enum-like
+        for ($i = 0; $i < 200; $i++) {
+            $status = ['active', 'inactive', 'pending'][$i % 3];
+            $type = ['basic', 'premium'][$i % 2];
+            $role = ['admin', 'user', 'guest'][$i % 3];
+            $priority = ['low', 'medium', 'high'][$i % 3];
+
+            $connection->insert('EntityWithEnumOpportunity', [
+                'status' => $status,
+                'type' => $type,
+                'role' => $role,
+                'priority' => $priority,
+                'name' => 'Name ' . $i,
+                'description' => 'Description ' . $i,
+            ]);
+        }
+
+        // Insert data for EntityWithMixedIssues
+        // 150 rows with 3 distinct status values = ratio 0.02 < 0.03 = enum-like
+        for ($i = 0; $i < 150; $i++) {
+            $status = ['draft', 'published', 'archived'][$i % 3];
+
+            $connection->insert('EntityWithMixedIssues', [
+                'status' => $status,
+                'metadata' => serialize(['key' => 'value']),
+                'settings' => serialize(['setting' => true]),
+                'tags' => 'tag1,tag2',
+            ]);
         }
     }
 

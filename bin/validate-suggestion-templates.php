@@ -56,17 +56,21 @@ class TemplateValidator
         }
 
         $files = [];
-        $iterator = new DirectoryIterator($dir);
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
 
         foreach ($iterator as $fileInfo) {
-            if ($fileInfo->isDot()) {
-                continue;
-            }
-
             $filename = $fileInfo->getFilename();
 
             // Skip index.php and EXAMPLE_* files
             if ($filename === 'index.php' || strpos($filename, 'EXAMPLE_') === 0) {
+                continue;
+            }
+
+            // Skip README.md and other non-PHP files
+            if ($filename === 'README.md') {
                 continue;
             }
 

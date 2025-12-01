@@ -527,7 +527,6 @@ class MissingIndexAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Analyzer
 
         $hasPossibleKeysButNotUsed = null === $key && null !== $possibleKeys;
 
-
         if ($isFullTableScan) {
             return $rows >= $this->missingIndexAnalyzerConfig?->minRowsScanned;
         }

@@ -544,7 +544,7 @@ class DoctrineDoctorDataCollector extends DataCollector implements LateDataColle
                 'Applied exclude_paths filter (%s): %d queries filtered, %d remaining',
                 implode(', ', $this->excludePaths),
                 $filteredCount,
-                count($filteredQueries)
+                count($filteredQueries),
             ));
         }
 

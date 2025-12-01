@@ -369,7 +369,6 @@ class DoctrineCacheAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Analyze
     {
         $autoGenerate = $configuration->getAutoGenerateProxyClasses();
 
-
         if (in_array($autoGenerate, [true, 1, 2], true)) {
             $configurationIssue = new ConfigurationIssue([
                 'cache_type'         => 'proxy',
@@ -416,7 +415,6 @@ class DoctrineCacheAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Analyze
             $reflectionClass  = new ReflectionClass($cacheFactory::class);
             $regionsCacheProp = $reflectionClass->getProperty('regionsConfiguration');
             $regionsCacheProp->getValue($cacheFactory);
-
 
             return $this->createIssue(
                 'warning',

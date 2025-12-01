@@ -292,6 +292,14 @@ final class QueryDataCollection extends AbstractCollection
     }
 
     /**
+     * @param iterable<int, QueryData> $items
+     */
+    protected static function createInstance(iterable $items): static
+    {
+        return new self($items);
+    }
+
+    /**
      * Check if a query originates from one of the excluded paths by analyzing its backtrace.
      * If any frame in the backtrace contains an excluded path, the query is filtered out.
      *
@@ -324,13 +332,5 @@ final class QueryDataCollection extends AbstractCollection
         }
 
         return false;
-    }
-
-    /**
-     * @param iterable<int, QueryData> $items
-     */
-    protected static function createInstance(iterable $items): static
-    {
-        return new self($items);
     }
 }

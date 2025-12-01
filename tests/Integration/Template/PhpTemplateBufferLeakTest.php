@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * This file is part of the Doctrine Doctor.
+ * (c) 2025 Ahmed EBEN HASSINE
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace AhmedBhs\DoctrineDoctor\Tests\Integration\Template;
@@ -50,36 +57,10 @@ final class PhpTemplateBufferLeakTest extends TestCase
         parent::tearDown();
     }
 
-    private function removeDirectory(string $dir): void
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-
-        $items = glob($dir . '/{,.}*', GLOB_MARK | GLOB_BRACE);
-        if (false === $items) {
-            return;
-        }
-
-        foreach ($items as $item) {
-            if (basename($item) === '.' || basename($item) === '..') {
-                continue;
-            }
-
-            if (is_dir($item)) {
-                $this->removeDirectory($item);
-            } else {
-                unlink($item);
-            }
-        }
-
-        rmdir($dir);
-    }
-
     /**
-     * @test
+     * @runInSeparateProcess
      */
-    public function it_should_not_leak_html_buffer_on_template_error(): void
+    public function test_it_should_not_leak_html_buffer_on_template_error(): void
     {
         // Create a template that simulates the bug
         $templateContent = <<<'PHP'
@@ -116,17 +97,17 @@ PHP;
 
             // If we get here, the bug might be "fixed" by PHP auto-conversion
             // Check that no HTML leaked
-            $this->assertSame($bufferLevelBefore, ob_get_level(), 'Output buffer level should be unchanged');
+            self::assertSame($bufferLevelBefore, ob_get_level(), 'Output buffer level should be unchanged');
 
         } catch (\Throwable $e) {
             // Error occurred - this is expected
             // BUT: check that HTML buffer was cleaned
             $bufferLevelAfter = ob_get_level();
 
-            $this->assertSame(
+            self::assertSame(
                 $bufferLevelBefore,
                 $bufferLevelAfter,
-                'Output buffer should be cleaned even when template throws error. Buffer leak detected!'
+                'Output buffer should be cleaned even when template throws error. Buffer leak detected!',
             );
 
             // Verify no HTML was output
@@ -135,21 +116,21 @@ PHP;
                 $output .= ob_get_clean();
             }
 
-            $this->assertEmpty(
+            self::assertEmpty(
                 $output,
-                'No HTML should leak into output buffer. Found: ' . substr($output, 0, 200)
+                'No HTML should leak into output buffer. Found: ' . substr($output, 0, 200),
             );
         }
     }
 
     /**
-     * @test
+     * @runInSeparateProcess
      */
-    public function it_reproduces_primary_key_mixed_template_bug(): void
+    public function test_it_reproduces_primary_key_mixed_template_bug(): void
     {
         // Copy the actual problematic template
         $templateContent = file_get_contents(
-            dirname(__DIR__, 3) . '/src/Template/Suggestions/Integrity/primary_key_mixed.php'
+            dirname(__DIR__, 3) . '/src/Template/Suggestions/Integrity/primary_key_mixed.php',
         );
 
         file_put_contents($this->templateDirectory . '/Integrity', '');
@@ -171,8 +152,8 @@ PHP;
             ]);
 
             // If successful, verify result doesn't contain raw HTML buffer
-            $this->assertIsArray($result);
-            $this->assertArrayHasKey('code', $result);
+            self::assertIsArray($result);
+            self::assertArrayHasKey('code', $result);
 
         } catch (\Throwable $e) {
             // Check buffer was cleaned
@@ -183,23 +164,46 @@ PHP;
                 $leaked .= ob_get_clean();
             }
 
-            $this->fail(
+            self::fail(
                 "Template threw error AND leaked HTML buffer:\n" .
                 "Error: {$e->getMessage()}\n" .
-                "Leaked HTML: " . substr($leaked, 0, 500)
+                "Leaked HTML: " . substr($leaked, 0, 500),
             );
         }
     }
 
-    /**
-     * @test
-     */
-    public function it_should_capture_http_response_with_leaked_html(): void
+    public function test_it_should_capture_http_response_with_leaked_html(): void
     {
         // Simulate what happens in a real HTTP response
-        $this->markTestIncomplete(
+        self::markTestIncomplete(
             'This test simulates the full HTTP flow where JSON response gets HTML appended. ' .
-            'Run the route /api/test/mixed-primary-keys to see the bug in action.'
+            'Run the route /api/test/mixed-primary-keys to see the bug in action.',
         );
+    }
+
+    private function removeDirectory(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $items = glob($dir . '/{,.}*', GLOB_MARK | GLOB_BRACE);
+        if (false === $items) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            if ('.' === basename($item) || '..' === basename($item)) {
+                continue;
+            }
+
+            if (is_dir($item)) {
+                $this->removeDirectory($item);
+            } else {
+                unlink($item);
+            }
+        }
+
+        rmdir($dir);
     }
 }

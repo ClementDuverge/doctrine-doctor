@@ -262,26 +262,6 @@ final class SqlJoinExtractor implements JoinExtractorInterface
     }
 
     /**
-     * Normalizes JOIN type to standard format.
-     *
-     * LEFT OUTER � LEFT
-     * RIGHT OUTER � RIGHT
-     * JOIN � INNER
-     * Empty � INNER
-     */
-    private function normalizeJoinType(string $type): string
-    {
-        $type = strtoupper(trim($type));
-
-        return match ($type) {
-            'LEFT OUTER' => 'LEFT',
-            'RIGHT OUTER' => 'RIGHT',
-            'JOIN', '' => 'INNER',  // JOIN without type = INNER JOIN
-            default => $type,
-        };
-    }
-
-    /**
      * Extracts parsed ON conditions for a specific JOIN.
      *
      * @return array<int, array{left: string, operator: string, right: string}>
@@ -334,5 +314,25 @@ final class SqlJoinExtractor implements JoinExtractorInterface
         }
 
         return [];
+    }
+
+    /**
+     * Normalizes JOIN type to standard format.
+     *
+     * LEFT OUTER � LEFT
+     * RIGHT OUTER � RIGHT
+     * JOIN � INNER
+     * Empty � INNER
+     */
+    private function normalizeJoinType(string $type): string
+    {
+        $type = strtoupper(trim($type));
+
+        return match ($type) {
+            'LEFT OUTER' => 'LEFT',
+            'RIGHT OUTER' => 'RIGHT',
+            'JOIN', '' => 'INNER',  // JOIN without type = INNER JOIN
+            default => $type,
+        };
     }
 }

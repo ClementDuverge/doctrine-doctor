@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace AhmedBhs\DoctrineDoctor\Analyzer\Helper;
 
+use PhpMyAdmin\SqlParser\Components\Condition;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
-use PhpMyAdmin\SqlParser\Components\Condition;
 
 /**
  * Detects SQL/DQL injection patterns in queries using SQL parser.
@@ -93,91 +93,6 @@ class InjectionPatternDetector
     }
 
     /**
-     * Parse SQL and extract useful data for analysis.
-     *
-     * @return array{literals: list<string>, has_like: bool, like_values: list<string>, condition_count: int, parsed: bool}
-     */
-    private function parseSql(string $sql): array
-    {
-        $result = [
-            'literals' => [],
-            'has_like' => false,
-            'like_values' => [],
-            'condition_count' => 0,
-            'parsed' => false,
-        ];
-
-        try {
-            $parser = new Parser($sql);
-
-            if (empty($parser->statements)) {
-                return $result;
-            }
-
-            $statement = $parser->statements[0];
-
-            if (!$statement instanceof SelectStatement) {
-                return $result;
-            }
-
-            $result['parsed'] = true;
-
-            if (null !== $statement->where) {
-                $result = $this->extractWhereData($statement->where, $result);
-            }
-
-            return $result;
-        } catch (\Throwable) {
-            return $result;
-        }
-    }
-
-    /**
-     * Extract data from WHERE conditions.
-     *
-     * @param Condition[] $conditions
-     * @param array{literals: list<string>, has_like: bool, like_values: list<string>, condition_count: int, parsed: bool} $result
-     * @return array{literals: list<string>, has_like: bool, like_values: list<string>, condition_count: int, parsed: bool}
-     */
-    private function extractWhereData(array $conditions, array $result): array
-    {
-        foreach ($conditions as $condition) {
-            if (!$condition instanceof Condition) {
-                continue;
-            }
-
-            $expr = $condition->expr ?? '';
-            if ('' === $expr) {
-                continue;
-            }
-
-            ++$result['condition_count'];
-
-            if (stripos($expr, 'LIKE') !== false) {
-                $result['has_like'] = true;
-
-                $rightOperand = $condition->rightOperand ?? '';
-                if ('' !== $rightOperand && 1 === preg_match("/^['\"](.*)['\"]\$/", $rightOperand, $matches)) {
-                    $result['like_values'][] = $matches[1];
-                } elseif (1 === preg_match("/LIKE\s+['\"]([^'\"]*)['\"]/" . 'i', $expr, $matches)) {
-                    $result['like_values'][] = $matches[1];
-                }
-            }
-
-            $rightOperand = $condition->rightOperand ?? '';
-            if ('' !== $rightOperand && 1 === preg_match("/^['\"](.*)['\"]\$/", $rightOperand, $matches)) {
-                $result['literals'][] = $matches[1];
-            } elseif (1 === preg_match_all("/=\s*['\"]([^'\"]*)['\"]/" , $expr, $matches)) {
-                foreach ($matches[1] as $literal) {
-                    $result['literals'][] = $literal;
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
      * Pattern 1: Numeric values inside quoted strings.
      *
      * Uses parser to find literals, then checks if they contain suspicious numbers.
@@ -195,43 +110,11 @@ class InjectionPatternDetector
             return false;
         }
 
-        if (1 !== preg_match("/['\"]([^'\"]*\d+[^'\"]*)['\"]/" , $sql, $matches)) {
+        if (1 !== preg_match("/['\"]([^'\"]*\d+[^'\"]*)['\"]/", $sql, $matches)) {
             return false;
         }
 
         return $this->isSuspiciousNumericValue($matches[1]);
-    }
-
-    /**
-     * Check if a value is a suspicious numeric string.
-     */
-    private function isSuspiciousNumericValue(string $value): bool
-    {
-        if (1 !== preg_match('/\d/', $value)) {
-            return false;
-        }
-
-        if (1 === preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value)) {
-            return false;
-        }
-
-        if (1 === preg_match('/^\d{4}-\d{2}-\d{2}/', $value) || 1 === preg_match('/^\d{2}\/\d{2}\/\d{4}/', $value)) {
-            return false;
-        }
-
-        if (1 === preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $value)) {
-            return false;
-        }
-
-        if (1 === preg_match('/^\d+\.\d+(\.\d+)?$/', $value)) {
-            return false;
-        }
-
-        if (1 === preg_match('/^\d{1,10}$/', $value)) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -324,28 +207,6 @@ class InjectionPatternDetector
     }
 
     /**
-     * Check if a literal value is suspicious (not a safe enum/status).
-     */
-    private function isSuspiciousLiteralValue(string $value): bool
-    {
-        $normalizedValue = strtolower(trim($value));
-
-        if ('' === $normalizedValue) {
-            return false;
-        }
-
-        if (in_array($normalizedValue, self::SAFE_LITERAL_VALUES, true)) {
-            return false;
-        }
-
-        if (strlen($normalizedValue) <= 10 && 1 === preg_match('/^[a-z]+$/', $normalizedValue)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Pattern 7: Multiple OR/AND conditions with literal strings.
      *
      * Uses parser to count conditions with literals.
@@ -357,7 +218,7 @@ class InjectionPatternDetector
         if (!empty($parsedData['parsed'])) {
             $suspiciousLiterals = array_filter(
                 $parsedData['literals'] ?? [],
-                fn(string $v) => $this->isSuspiciousLiteralValue($v)
+                fn (string $v) => $this->isSuspiciousLiteralValue($v),
             );
 
             return count($suspiciousLiterals) >= 2;
@@ -381,5 +242,144 @@ class InjectionPatternDetector
             'multiple_conditions' => 'Multiple conditions with literals - complex injection attempt',
             default => 'Unknown pattern',
         };
+    }
+
+    /**
+     * Parse SQL and extract useful data for analysis.
+     *
+     * @return array{literals: list<string>, has_like: bool, like_values: list<string>, condition_count: int, parsed: bool}
+     */
+    private function parseSql(string $sql): array
+    {
+        $result = [
+            'literals' => [],
+            'has_like' => false,
+            'like_values' => [],
+            'condition_count' => 0,
+            'parsed' => false,
+        ];
+
+        try {
+            $parser = new Parser($sql);
+
+            if (empty($parser->statements)) {
+                return $result;
+            }
+
+            $statement = $parser->statements[0];
+
+            if (!$statement instanceof SelectStatement) {
+                return $result;
+            }
+
+            $result['parsed'] = true;
+
+            if (null !== $statement->where) {
+                $result = $this->extractWhereData($statement->where, $result);
+            }
+
+            return $result;
+        } catch (\Throwable) {
+            return $result;
+        }
+    }
+
+    /**
+     * Extract data from WHERE conditions.
+     *
+     * @param Condition[] $conditions
+     * @param array{literals: list<string>, has_like: bool, like_values: list<string>, condition_count: int, parsed: bool} $result
+     * @return array{literals: list<string>, has_like: bool, like_values: list<string>, condition_count: int, parsed: bool}
+     */
+    private function extractWhereData(array $conditions, array $result): array
+    {
+        foreach ($conditions as $condition) {
+            if (!$condition instanceof Condition) {
+                continue;
+            }
+
+            $expr = $condition->expr ?? '';
+            if ('' === $expr) {
+                continue;
+            }
+
+            ++$result['condition_count'];
+
+            if (false !== stripos($expr, 'LIKE')) {
+                $result['has_like'] = true;
+
+                $rightOperand = $condition->rightOperand ?? '';
+                if ('' !== $rightOperand && 1 === preg_match("/^['\"](.*)['\"]\$/", $rightOperand, $matches)) {
+                    $result['like_values'][] = $matches[1];
+                } elseif (1 === preg_match("/LIKE\s+['\"]([^'\"]*)['\"]/" . 'i', $expr, $matches)) {
+                    $result['like_values'][] = $matches[1];
+                }
+            }
+
+            $rightOperand = $condition->rightOperand ?? '';
+            if ('' !== $rightOperand && 1 === preg_match("/^['\"](.*)['\"]\$/", $rightOperand, $matches)) {
+                $result['literals'][] = $matches[1];
+            } elseif (1 === preg_match_all("/=\s*['\"]([^'\"]*)['\"]/", $expr, $matches)) {
+                foreach ($matches[1] as $literal) {
+                    $result['literals'][] = $literal;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check if a value is a suspicious numeric string.
+     */
+    private function isSuspiciousNumericValue(string $value): bool
+    {
+        if (1 !== preg_match('/\d/', $value)) {
+            return false;
+        }
+
+        if (1 === preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value)) {
+            return false;
+        }
+
+        if (1 === preg_match('/^\d{4}-\d{2}-\d{2}/', $value) || 1 === preg_match('/^\d{2}\/\d{2}\/\d{4}/', $value)) {
+            return false;
+        }
+
+        if (1 === preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $value)) {
+            return false;
+        }
+
+        if (1 === preg_match('/^\d+\.\d+(\.\d+)?$/', $value)) {
+            return false;
+        }
+
+        if (1 === preg_match('/^\d{1,10}$/', $value)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if a literal value is suspicious (not a safe enum/status).
+     */
+    private function isSuspiciousLiteralValue(string $value): bool
+    {
+        $normalizedValue = strtolower(trim($value));
+
+        if ('' === $normalizedValue) {
+            return false;
+        }
+
+        if (in_array($normalizedValue, self::SAFE_LITERAL_VALUES, true)) {
+            return false;
+        }
+
+        if (strlen($normalizedValue) <= 10 && 1 === preg_match('/^[a-z]+$/', $normalizedValue)) {
+            return false;
+        }
+
+        return true;
     }
 }

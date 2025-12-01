@@ -250,9 +250,7 @@ class JoinOptimizationAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Anal
     {
         $sql = $context['sql'];
 
-
         $leftJoins = array_filter($joins, fn (array $join) => 'LEFT' === $join['type']);
-
 
         if (count($leftJoins) < 2) {
             return; // No issue if less than 2 LEFT JOINs
@@ -263,7 +261,6 @@ class JoinOptimizationAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Anal
         if (null === $fromTable) {
             return; // Can't analyze without knowing the main table
         }
-
 
         $collectionJoins = [];
 
@@ -276,11 +273,9 @@ class JoinOptimizationAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Anal
             }
         }
 
-
         if (count($collectionJoins) < 2) {
             return;
         }
-
 
         $issue = $this->createMultiStepHydrationIssue($context, $collectionJoins, $query);
 
@@ -290,8 +285,8 @@ class JoinOptimizationAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Anal
             if (!isset($seenIssues[$key])) {
                 $seenIssues[$key] = true;
                 yield $issue;
-            } else {
             }
+
         }
     }
 
@@ -739,9 +734,7 @@ class JoinOptimizationAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Anal
 
             if ($leftIsPK && !$rightIsPK) {
                 ++$collectionVotes;
-            }
-
-            elseif (!$leftIsPK && $rightIsPK) {
+            } elseif (!$leftIsPK && $rightIsPK) {
                 ++$notCollectionVotes;
             }
 
@@ -751,11 +744,11 @@ class JoinOptimizationAnalyzer implements \AhmedBhs\DoctrineDoctor\Analyzer\Anal
             return $this->canBeCollection($joinTable, $metadataMap);
         }
 
-        if ($collectionVotes > 0 && $notCollectionVotes === 0) {
+        if ($collectionVotes > 0 && 0 === $notCollectionVotes) {
             return true; // Collection
         }
 
-        if ($notCollectionVotes > 0 && $collectionVotes === 0) {
+        if ($notCollectionVotes > 0 && 0 === $collectionVotes) {
             return false; // NOT collection
         }
 

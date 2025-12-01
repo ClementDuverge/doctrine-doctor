@@ -213,8 +213,8 @@ class UnusedEagerLoadAnalyzer implements AnalyzerInterface
      */
     private function createOverEagerIssue(int $joinCount, ?array $backtrace, ?bool $isCollection): IssueData
     {
-        $joinType = $isCollection === true ? 'collection JOINs (OneToMany/ManyToMany)'
-                  : ($isCollection === false ? 'JOINs' : 'JOINs (possibly collections)');
+        $joinType = true === $isCollection ? 'collection JOINs (OneToMany/ManyToMany)'
+                  : (false === $isCollection ? 'JOINs' : 'JOINs (possibly collections)');
 
         $description = DescriptionHighlighter::highlight(
             'Over-eager loading detected: {count} {type} in a single query. This can cause significant data duplication and memory waste.',
@@ -224,7 +224,7 @@ class UnusedEagerLoadAnalyzer implements AnalyzerInterface
             ],
         );
 
-        if ($isCollection === true) {
+        if (true === $isCollection) {
             $description .= "\n\n⚠️ Each collection JOIN multiplies the result rows. With {$joinCount} collection JOINs, you may be loading the same parent entity data hundreds or thousands of times.";
             $description .= "\n\nExample: 1 parent × 10 items × 5 comments = 50 SQL rows for 1 entity!";
         } else {
@@ -237,7 +237,7 @@ class UnusedEagerLoadAnalyzer implements AnalyzerInterface
             type: self::ISSUE_TYPE,
             title: "Over-Eager Loading: {$joinCount} {$joinType} in Single Query",
             description: $description,
-            severity: $this->calculateOverEagerSeverity($joinCount, $isCollection === true),
+            severity: $this->calculateOverEagerSeverity($joinCount, true === $isCollection),
             suggestion: $this->createOverEagerSuggestion($joinCount),
             queries: [],
             backtrace: $backtrace,

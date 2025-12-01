@@ -45,7 +45,7 @@ final class DoctrineDoctorDataCollectorTest extends TestCase
         self::assertCount(
             $expectedCount,
             $filtered,
-            sprintf('Expected %d queries after filtering, got %d. Test case: %s', $expectedCount, count($filtered), $description)
+            sprintf('Expected %d queries after filtering, got %d. Test case: %s', $expectedCount, count($filtered), $description),
         );
     }
 
